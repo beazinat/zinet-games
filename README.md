@@ -22,7 +22,7 @@
 
 <p align="center">
  <a href="#about">About</a> •
- <a href="#features">Features</a> •
+ <a href="#features">Features</a>
 </p>
 
 ## 📌About
