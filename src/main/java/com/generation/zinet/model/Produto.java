@@ -1,5 +1,9 @@
 package com.generation.zinet.model;
 
+import java.sql.Date;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -12,9 +16,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 @Entity
-@Table(name = Produto.TABLE_NAME)
+@Table(name = "tb_produtos")
 public class Produto {
-    public static final String TABLE_NAME = "tb_produtos";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,25 +30,24 @@ public class Produto {
     @NotBlank(message = "A descrição é obrigatória!")
     @Size(min = 10, message = "A descrição deve conter no mínimo 10 caracteres")
     private String descricao;
-
+    
     @NotNull(message = "O preço é obrigatório!")
     private Double preco;
 
     @NotBlank(message = "O desenvolvedor é obrigatório!")
-    @Size(min = 3, max = 255, message = "O desenvolvedor deve conter no mínimo 03 e no máximo 255 caracteres")
     private String desenvolvedor;
 
     @NotBlank(message = "A publicadora é obrigatória!")
-    @Size(min = 3, max = 255, message = "A publicadora deve conter no mínimo 03 e no máximo 255 caracteres")
     private String publicadora;
 
     @NotNull(message = "A data de lançamento é obrigatória!")
-    private String dataLancamento;
+    private Date dataLancamento;
 
     @NotBlank(message = "A plataforma é obrigatória!")
     private String plataforma;
 
     @ManyToOne
+    @JsonIgnoreProperties("produto")
     @JoinColumn(name = "categoria_id", nullable = false)
     @NotNull(message = "A categoria é obrigatória!")
     private Categoria categoria;
@@ -117,11 +119,11 @@ public class Produto {
 		this.publicadora = publicadora;
 	}
 
-	public String getDataLancamento() {
+	public Date getDataLancamento() {
 		return dataLancamento;
 	}
 
-	public void setDataLancamento(String dataLancamento) {
+	public void setDataLancamento(Date dataLancamento) {
 		this.dataLancamento = dataLancamento;
 	}
 
@@ -204,4 +206,5 @@ public class Produto {
 	public void setNumeroAvaliacoes(Integer numeroAvaliacoes) {
 		this.numeroAvaliacoes = numeroAvaliacoes;
 	}
+    
 }

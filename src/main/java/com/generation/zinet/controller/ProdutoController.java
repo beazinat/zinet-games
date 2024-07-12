@@ -1,9 +1,10 @@
 package com.generation.zinet.controller;
 
 import java.util.List;
+import java.util.Optional;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,10 +13,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.generation.zinet.model.Produto;
+import com.generation.zinet.repository.CategoriaRepository;
 import com.generation.zinet.repository.ProdutoRepository;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/produtos")
@@ -24,41 +30,50 @@ public class ProdutoController {
 	@Autowired
 	private ProdutoRepository produtoRepository;
 	
+	@Autowired
+	private CategoriaRepository categoriaRepository;
+	
 	@GetMapping
-	public List<Produto> getAllProdutos() {
-		return produtoRepository.findAll();
+	public ResponseEntity<List<Produto>> getAll() {
+		return ResponseEntity.ok(produtoRepository.findAll());
 	}
 	
 	@GetMapping("/{id}")
-	public ResponseEntity<Produto> getProdutoById(@PathVariable Long id) {
+	public ResponseEntity<Produto> getById (@PathVariable Long id){
 		return produtoRepository.findById(id)
-				.map(ResponseEntity::ok)
+				.map(resposta -> ResponseEntity.ok(resposta))
 				.orElse(ResponseEntity.notFound().build());
+	}
+	
+	@GetMapping("/nome/{nome}")
+	public ResponseEntity<List<Produto>> getByNome(@PathVariable String nome) {
+		return ResponseEntity.ok(produtoRepository.getAllByNomeContainingIgnoreCase(nome));
 	}
 	
 	@PostMapping
-	public Produto createProduto(@RequestBody Produto produto) {
-		return produtoRepository.save(produto);
+	public ResponseEntity<Produto> post(@Valid @RequestBody Produto produto) {
+		if(categoriaRepository.existsById(produto.getCategoria().getId()))
+			return ResponseEntity.status(HttpStatus.CREATED)
+					.body(produtoRepository.save(produto));
+		throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Categoria inexistente.", null);
 	}
 	
-	@PutMapping("/{id}")
-	public ResponseEntity<Produto> updateProduto(@PathVariable Long id, @RequestBody Produto produtoDetails) {
-		return produtoRepository.findById(id)
-				.map(produto -> {
-					BeanUtils.copyProperties(produtoDetails, produto, "id");
-                    Produto updatedProduto = produtoRepository.save(produto);
-                    return ResponseEntity.ok(updatedProduto);
-				})
-				.orElse(ResponseEntity.notFound().build());
+	@PutMapping
+	public ResponseEntity<Produto> put(@Valid @RequestBody Produto produto) {
+		if(categoriaRepository.existsById(produto.getCategoria().getId()))
+			return ResponseEntity.status(HttpStatus.CREATED)
+					.body(produtoRepository.save(produto));
+		throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Categoria inexistente.", null);
 	}
 	
+	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@DeleteMapping("/{id}")
-    public ResponseEntity<Object> deleteProduto(@PathVariable Long id) {
-        return produtoRepository.findById(id)
-                .map(produto -> {
-                    produtoRepository.delete(produto);
-                    return ResponseEntity.noContent().build();
-                })
-                .orElse(ResponseEntity.notFound().build());
+	public void delete(@PathVariable Long id) {
+		Optional<Produto> produto = produtoRepository.findById(id);
+		
+		if(produto.isEmpty())
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+		
+		produtoRepository.deleteById(id);
 	}
 }
